@@ -98,9 +98,10 @@ function InterruptSync:OnDocLoaded()
 		-- e.g. Apollo.RegisterEventHandler("KeyDown", "OnKeyDown", self)
 		Apollo.RegisterSlashCommand("nsync", "OnInterruptSyncOn", self)
 
-		self.timer = ApolloTimer.Create(1.0, true, "OnTimer", self)
+		self.timer = ApolloTimer.Create(0.1, true, "OnTimer", self)
 		
 		self.playerLas = {}
+		self.playerInterruptAbilitites = {}
 		self.groupMembers = {}
 		self.abTimer = nil
 		
@@ -197,6 +198,7 @@ end
 
 function InterruptSync:GetActiveInterrupts()
 	Print("GetActiveInterrupts()")
+	self.playerInterruptAbilitites = {}
 	local interrupts = {}
 	local abilities = AbilityBook.GetAbilitiesList()
 	for _, ability in pairs(abilities) do
@@ -207,6 +209,11 @@ function InterruptSync:GetActiveInterrupts()
 			int.ia = g_interrupts[ability.strName][ability.nCurrentTier]
 			
 			Print(int.name)
+			local ab = {
+				obj = ability,
+				active = false
+			}
+			table.insert(self.playerInterruptAbilitites, ab)
 			
 			table.insert(interrupts, int)
 		end
@@ -238,6 +245,17 @@ end
 -- on timer
 function InterruptSync:OnTimer()
 	-- Do your timer-related stuff here.
+	for _, ab in pairs(self.playerInterruptAbilitites) do
+		local ability = ab.obj
+		local remainingCd = ability.tTiers[ability.nCurrentTier].splObject:GetCooldownRemaining()
+		if remainingCd > 0 and not ab.active then
+			Print(string.format("Interrupt fired: %s", ability.strName))
+			ab.active = true
+		elseif remainingCd == 0 and ab.active then
+			Print(string.format("Interrupt Reset: %s", ability.strName))
+			ab.active = false
+		end
+	end
 end
 
 function InterruptSync:OnAbilityBookChange()
