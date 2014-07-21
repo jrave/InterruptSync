@@ -126,6 +126,15 @@ end
 -----------------------------------------------------------------------------------------------
 -- Define general functions here
 
+function InterruptSync:DrawInterruptControl(wnd, controlName, interrupt)
+	local wndItem = wnd:FindChild(controlName)
+	if wndItem then
+		wndItem:SetText(tostring(interrupt.ia))
+		local tooltipText = string.format("%s - %f", interrupt.name, interrupt.cd)
+		wndItem:SetTooltip(tooltipText)
+	end
+end
+
 function InterruptSync:UpdateUIWithMessage(msg)
 	Print("UpdateUIWithMessage()")
 		
@@ -137,19 +146,19 @@ function InterruptSync:UpdateUIWithMessage(msg)
 		self.tItems[msg.pName] = wnd
 	end
 	
-	local wndItemText = wnd:FindChild("Text")
-	if wndItemText then
-		local fullStr = ""
-		for _, int in pairs(msg.interrupts) do
-			local strInt = string.format("(%s: %d, %f)", int.name, int.ia, int.cd)
-			fullStr = fullStr .. strInt .. ", "
-		end
-		local txt = string.format("%s: %s", msg.pName, fullStr)
-		wndItemText:SetText(txt)
+	local wndItemPlayerText = wnd:FindChild("TextPlayerName")
+	if wndItemPlayerText then
+		wndItemPlayerText:SetText(msg.pName)
 	end
 	
+	local i = 1
+	for _, int in pairs(msg.interrupts) do
+		local itemName = string.format("TextInt%s", i)
+		self:DrawInterruptControl(wnd, itemName, int)
+		i = i + 1
+	end
+		
 	wnd:SetData(msg)
-	
 	self.wndItemList:ArrangeChildrenVert()
 end
 
