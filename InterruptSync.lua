@@ -115,6 +115,8 @@ function InterruptSync:OnDocLoaded()
 		Apollo.RegisterEventHandler("AbilityBookChange", "OnAbilityBookChange", self)
 		Apollo.RegisterEventHandler("Group_Add", "OnGroupChange", self)
 		Apollo.RegisterEventHandler("Group_Remove", "OnGroupChange", self)
+		Apollo.RegisterEventHandler("Group_Join", "OnGroupChange", self)
+		Apollo.RegisterEventHandler("Group_Left", "OnGroupChange", self)
 		
 		-- Initial LAS read, future updates are handled through events
 		self:UpdateCurrentGroup()
