@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Addon Author="Jageel" APIVersion="9" Name="InterruptSync" Description="">
     <Script Name="InterruptSync.lua"/>
+    <Script Name="InterruptContainer.lua"/>
+    <Script Name="InterruptBar.lua"/>
     <Form Name="InterruptSync.xml"/>
 </Addon>
