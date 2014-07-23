@@ -107,6 +107,12 @@ function InterruptSync:OnDocLoaded()
 		self.playerInterruptAbilitites = {}
 		self.groupMembers = {}
 		
+		-- Rover
+		self.Rover = Apollo.GetAddon("Rover")
+		if self.Rover then
+			self.Rover:AddWatch("InterruptSync.self", self)
+		end
+
 		self.intChannel = ICCommLib.JoinChannel("InterruptSync", "OnMessageInChannel", self)
 
 		-- Do additional Addon initialization here
@@ -250,9 +256,8 @@ end
 
 function InterruptSync:SendAbilityUpdate(ability)
 
-	local Rover = Apollo.GetAddon("Rover")
-	if Rover then
-		Rover:AddWatch("SendAbility", ability)
+	if self.Rover then
+		self.Rover:AddWatch("SendAbility", ability)
 	end
 
 	local player = GameLib.GetPlayerUnit()
