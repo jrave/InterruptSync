@@ -107,6 +107,12 @@ function InterruptSync:OnDocLoaded()
 		self.playerInterruptAbilitites = {}
 		self.groupMembers = {}
 		
+		-- Rover
+		self.Rover = Apollo.GetAddon("Rover")
+		if self.Rover then
+			self.Rover:AddWatch("InterruptSync.self", self)
+		end
+
 		self.intChannel = ICCommLib.JoinChannel("InterruptSync", "OnMessageInChannel", self)
 
 		-- Do additional Addon initialization here
