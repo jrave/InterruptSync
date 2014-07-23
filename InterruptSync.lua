@@ -42,6 +42,7 @@ local g_interrupts = {
 }
 
 local g_MessageTypeLas = 1
+local g_MessageTypeAbility = 2
 
 local g_TextItemCount = 3
  
@@ -105,25 +106,19 @@ function InterruptSync:OnDocLoaded()
 		self.playerLas = {}
 		self.playerInterruptAbilitites = {}
 		self.groupMembers = {}
-		self.abTimer = nil
 		
 		self.intChannel = ICCommLib.JoinChannel("InterruptSync", "OnMessageInChannel", self)
 
 		-- Do additional Addon initialization here
-		Apollo.RegisterTimerHandler("InterruptSync_AbilityTimer", "OnAbilityTimer", self)
 		
-		Apollo.RegisterEventHandler("AbilityBookChange", "OnAbilityBookChange", self)
-		Apollo.RegisterEventHandler("Group_Add", "OnGroupChange", self)
-		Apollo.RegisterEventHandler("Group_Remove", "OnGroupChange", self)
-		Apollo.RegisterEventHandler("Group_Join", "OnGroupChange", self)
-		Apollo.RegisterEventHandler("Group_Left", "OnGroupChange", self)
+		Apollo.RegisterEventHandler("AbilityBookChange", "Update", self)
+		Apollo.RegisterEventHandler("Group_Add", "Update", self)
+		Apollo.RegisterEventHandler("Group_Remove", "Update", self)
+		Apollo.RegisterEventHandler("Group_Join", "Update", self)
+		Apollo.RegisterEventHandler("Group_Left", "Update", self)
 		
-		-- Initial LAS read, future updates are handled through events
-		self:UpdateCurrentGroup()
-		-- Todo: Delay timer for LAS reading
-		-- ToDo: Onlz do stuff on OnAbilitzBook change if in group
-		self:ReadCurrentLas()
-		self:GetActiveInterrupts()
+		-- Perform an update.
+		self:Update()
 	end
 end
 
@@ -253,6 +248,26 @@ function InterruptSync:SendLasUpdate()
 	end
 end
 
+function InterruptSync:SendAbilityUpdate(ability)
+
+	local Rover = Apollo.GetAddon("Rover")
+	if Rover then
+		Rover:AddWatch("SendAbility", ability)
+	end
+
+	local player = GameLib.GetPlayerUnit()
+	if player then
+		local msg = {}
+		msg.pName = player:GetName()
+		msg.ability = ability
+		msg.type = g_MessageTypeAbility
+		
+		Print("Sending Ability Message")
+		self.intChannel:SendMessage(msg)
+		self:OnMessageInChannel(nil, msg)
+	end
+end
+
 -- on SlashCommand "/nsync"
 function InterruptSync:OnInterruptSyncOn()
 	self.wndMain:Invoke() -- show the window
@@ -263,45 +278,46 @@ end
 -- on timer
 function InterruptSync:OnTimer()
 	-- Do your timer-related stuff here.
+	-- todo: minimize sent data by creating a smaller ab object with icon (id?), name, cooldown. we dont need the entire ab.obj thing.
 	for _, ab in pairs(self.playerInterruptAbilitites) do
 		local ability = ab.obj
-		local remainingCd = ability.tTiers[ability.nCurrentTier].splObject:GetCooldownRemaining()
-		if remainingCd > 0 and not ab.onCooldown then
+		ab.remainingCd = ability.tTiers[ability.nCurrentTier].splObject:GetCooldownRemaining()
+		if ab.remainingCd > 0 and not ab.onCooldown then
 			Print(string.format("Interrupt fired: %s", ability.strName))
 			ab.onCooldown = true
-		elseif remainingCd == 0 and ab.onCooldown then
+			self:SendAbilityUpdate(ab)
+		elseif ab.remainingCd == 0 and ab.onCooldown then
 			Print(string.format("Interrupt Reset: %s", ability.strName))
 			ab.onCooldown  = false
+			self:SendAbilityUpdate(ab)
 		end
+		
 	end
 end
 
-function InterruptSync:OnAbilityBookChange()
-	Print("OnAbilityBookChange()")
-	if GroupLib.InGroup() then
-		-- Creating Timer is a workaround as this event fires too early
-		self.abTimer = Apollo.CreateTimer("InterruptSync_AbilityTimer", 0.1, false)
-	end
+function InterruptSync:Update()
+	-- used because often when we want to update, the data hasn't been updated yet so we delay.
+	self.updateTimer = ApolloTimer.Create(1, false, "OnUpdateTimer", self)
 end
 
-function InterruptSync:OnAbilityTimer()
-	Print("OnAbilityTimer()")
+function InterruptSync:OnUpdateTimer()
+	Print("OnUpdateTimer()")
+	self:UpdateCurrentGroup()
 	self:ReadCurrentLas()
 	self:SendLasUpdate()
-	self.abTimer = nil
-end
-
-function InterruptSync:OnGroupChange()
-	Print("OnGroupChange()")
-	self:UpdateCurrentGroup()
-	self:SendLasUpdate()
+	
+	self.updateTimer = nil
 end
 
 function InterruptSync:OnMessageInChannel(channel, msg)
 	Print("OnMessageInChannel()")
 	if self:IsInGroup(msg.pName) then
 		Print("Sender is in group")
-		self:UpdateUIWithMessage(msg)
+		if msg.type == g_MessageTypeLas then
+			self:UpdateUIWithMessage(msg)
+		elseif msg.type == g_MessageTypeAbility then
+			Print("Ability recieved!")
+		end
 	end
 end
 
