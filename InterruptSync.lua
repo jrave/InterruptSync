@@ -42,6 +42,8 @@ local g_interrupts = {
 }
 
 local g_MessageTypeLas = 1
+
+local g_TextItemCount = 3
  
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -136,6 +138,14 @@ function InterruptSync:DrawInterruptControl(wnd, controlName, interrupt)
 	end
 end
 
+function InterruptSync:ResetInterruptControl(wnd, controlName)
+	local wndItem = wnd:FindChild(controlName)
+	if wndItem then
+		wndItem:SetText("")
+		wndItem:SetTooltip("")
+	end
+end
+
 function InterruptSync:UpdateUIWithMessage(msg)
 	Print("UpdateUIWithMessage()")
 		
@@ -151,14 +161,19 @@ function InterruptSync:UpdateUIWithMessage(msg)
 	if wndItemPlayerText then
 		wndItemPlayerText:SetText(msg.pName)
 	end
-	
+		
 	local i = 1
 	for _, int in pairs(msg.interrupts) do
 		local itemName = string.format("TextInt%s", i)
 		self:DrawInterruptControl(wnd, itemName, int)
 		i = i + 1
 	end
-		
+	
+	for j = i,g_TextItemCount do
+		local itemName = string.format("TextInt%s", j)
+		self:ResetInterruptControl(wnd, itemName)
+	end
+			
 	wnd:SetData(msg)
 	self.wndItemList:ArrangeChildrenVert()
 end
