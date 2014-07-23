@@ -123,6 +123,7 @@ function InterruptSync:OnDocLoaded()
 		-- Todo: Delay timer for LAS reading
 		-- ToDo: Onlz do stuff on OnAbilitzBook change if in group
 		self:ReadCurrentLas()
+		self:GetActiveInterrupts()
 	end
 end
 
@@ -228,7 +229,7 @@ function InterruptSync:GetActiveInterrupts()
 			Print(int.name)
 			local ab = {
 				obj = ability,
-				active = false
+				onCooldown = false
 			}
 			table.insert(self.playerInterruptAbilitites, ab)
 			
@@ -265,12 +266,12 @@ function InterruptSync:OnTimer()
 	for _, ab in pairs(self.playerInterruptAbilitites) do
 		local ability = ab.obj
 		local remainingCd = ability.tTiers[ability.nCurrentTier].splObject:GetCooldownRemaining()
-		if remainingCd > 0 and not ab.active then
+		if remainingCd > 0 and not ab.onCooldown then
 			Print(string.format("Interrupt fired: %s", ability.strName))
-			ab.active = true
-		elseif remainingCd == 0 and ab.active then
+			ab.onCooldown = true
+		elseif remainingCd == 0 and ab.onCooldown then
 			Print(string.format("Interrupt Reset: %s", ability.strName))
-			ab.active = false
+			ab.onCooldown  = false
 		end
 	end
 end
