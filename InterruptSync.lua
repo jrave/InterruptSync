@@ -102,7 +102,7 @@ function InterruptSync:OnDocLoaded()
 		Apollo.LoadSprites("ISSprites.xml")
 			
 		-- Rover
-		self.Rover = Apollo.GetAddon("Rover")
+		-- self.Rover = Apollo.GetAddon("Rover")
 		if self.Rover then
 			self.Rover:AddWatch("InterruptSync.self", self)
 		end
