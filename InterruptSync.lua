@@ -94,9 +94,11 @@ function InterruptSync:OnDocLoaded()
 			return
 		end
 		
-		self.wndItemList = self.wndMain:FindChild("ItemList")
 	    self.wndMain:Show(false, true)
-	
+		
+		self.wndContainer = Apollo.LoadForm(self.xmlDoc, "Barcontainer", nil, self)
+		self.wndContainer:Show(false, true)
+			
 		-- Rover
 		self.Rover = Apollo.GetAddon("Rover")
 		if self.Rover then
@@ -104,7 +106,7 @@ function InterruptSync:OnDocLoaded()
 		end
 	
 		-- not sure what is the best place for this is really
-		self.container = self.InterruptContainer:new(self.xmlDoc, self.Rover, self.InterruptBar, self.wndMain)
+		self.container = self.InterruptContainer:new(self.xmlDoc, self.Rover, self.InterruptBar, self.wndContainer)
 
 		-- if the xmlDoc is no longer needed, you should set it to nil
 		-- self.xmlDoc = nil
@@ -266,7 +268,7 @@ end
 
 -- on SlashCommand "/nsync"
 function InterruptSync:OnInterruptSyncOn()
-	self.wndMain:Invoke() -- show the window
+	self.wndContainer:Invoke() -- show the window
 	
 	self:SendLasUpdate()
 end
