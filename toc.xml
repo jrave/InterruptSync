@@ -4,4 +4,5 @@
     <Script Name="InterruptContainer.lua"/>
     <Script Name="InterruptBar.lua"/>
     <Form Name="InterruptSync.xml"/>
+    <Sprites Name="ISSprites.xml"/>
 </Addon>

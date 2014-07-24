@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Sprites>
+	<Sprite Name="IABacker" Cycle="1">
+		<Frame Texture="UI\Assets\Textures\UI_TargetFrames.tex" x0="7" x1="7" x2="7" x3="7" x4="54" x5="54" y0="942" y1="942" y2="942" y3="942" y4="989" y5="989" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+	</Sprite>
+</Sprites>

@@ -4,17 +4,23 @@ InterruptBar.__index = InterruptBar
 local is = Apollo.GetAddon("InterruptSync")
 is.InterruptBar = InterruptBar
 
-function InterruptBar:new(xmlDoc, interrupt, itemList)
+function InterruptBar:new(xmlDoc, playerName, interrupt, itemList)
 	local self = setmetatable({}, { __index = InterruptBar })
 	self.interrupt = interrupt
+	self.playerName = playerName
 	
 	self.wndInt = Apollo.LoadForm(xmlDoc, "InterruptBar", itemList, self)
 	
 	self.wndInt:FindChild("Icon"):SetSprite(self:GetIcon())
     self.wndInt:FindChild("ProgressOverlay"):SetMax(interrupt.cooldown)
     --self.wndInt:FindChild("ProgressOverlay"):SetFullSprite(self:GetIcon())
-    self.wndInt:FindChild("Text"):SetText(interrupt.name)
+    self.wndInt:FindChild("Text"):SetText(string.format("%s - %s", playerName, interrupt.name))
     self.wndInt:SetData(interrupt)
+
+	if self.interrupt.ia > 1 then
+		self.wndInt:FindChild("CCArmorContainer"):FindChild("CCArmorValue"):SetText(self.interrupt.ia)
+		self.wndInt:FindChild("CCArmorContainer"):Show(true)
+	end
 	
 	return self
 end
@@ -29,12 +35,12 @@ function InterruptBar:SetInterrupt(interrupt)
     self.wndInt:FindChild("ProgressOverlay"):SetProgress(interrupt.cooldownRemaining)
     self.interrupt = interrupt
     
-	self.wndInt:FindChild("Text"):SetText(interrupt.name)
+	self.wndInt:FindChild("Text"):SetText(string.format("%s - %s", self.playerName, interrupt.name))
 
     if interrupt.cooldownRemaining ~= 0 then
         self.wndInt:FindChild("Timer"):SetText(string.format("%.1fs", interrupt.cooldownRemaining))
     else
-        self.wndInt:FindChild("Timer"):SetText("")
+        self.wndInt:FindChild("Timer"):SetText(string.format("%.1fs", interrupt.cooldown))
     end
 end
 

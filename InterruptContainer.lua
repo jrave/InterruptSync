@@ -30,7 +30,7 @@ function InterruptContainer:HandleInterrupt(msg)
 	end
 	local interruptBar = player[interrupt.name]
 	if interruptBar == nil then
-		interruptBar = self.InterruptBar:new(self.xmlDoc, interrupt, self.itemList)
+		interruptBar = self.InterruptBar:new(self.xmlDoc, playerName, interrupt, self.itemList)
 		player[interrupt.name] = interruptBar
 	end
 	interruptBar:SetInterrupt(interrupt)
@@ -52,7 +52,7 @@ function InterruptContainer:HandleLas(msg)
 	end
 	-- Add the new bars
 	for _, interrupt in pairs(msg.interrupts) do
-		local bar = self.InterruptBar:new(self.xmlDoc, interrupt, self.itemList)
+		local bar = self.InterruptBar:new(self.xmlDoc, playerName, interrupt, self.itemList)
 		player[interrupt.name] = bar
 		bar:SetInterrupt(interrupt)
 		self.itemList:ArrangeChildrenVert()
