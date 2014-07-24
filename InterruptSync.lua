@@ -161,7 +161,7 @@ function InterruptSync:ResetInterruptControl(wnd, controlName)
 end
 
 function InterruptSync:UpdateCurrentGroup()
-	Print("UpdateCurrentGroup()")
+	--Print("UpdateCurrentGroup()")
 	self.groupMembers = {}
 	if GroupLib.InGroup() then
 		for i=1,GroupLib.GetMemberCount() do
@@ -174,7 +174,7 @@ function InterruptSync:UpdateCurrentGroup()
 end
 
 function InterruptSync:IsInGroup(name)
-	Print("IsInGroup()")
+	--Print("IsInGroup()")
 	if self.groupMembers[name] then
 		return true
 	end
@@ -182,7 +182,7 @@ function InterruptSync:IsInGroup(name)
 end
 
 function InterruptSync:ReadCurrentLas()
-	Print("ReadCurrentLas()")
+	--Print("ReadCurrentLas()")
 	-- reset playeLas
 	self.playerLas = {}
 	local currentAS = ActionSetLib.GetCurrentActionSet() or {}
@@ -194,7 +194,7 @@ function InterruptSync:ReadCurrentLas()
 end
 
 function InterruptSync:GetActiveInterrupts()
-	Print("GetActiveInterrupts()")
+	--Print("GetActiveInterrupts()")
 	self.playerInterruptAbilitites = {}
 	local interrupts = {}
 	local abilities = AbilityBook.GetAbilitiesList()
@@ -202,7 +202,7 @@ function InterruptSync:GetActiveInterrupts()
 	    if g_interrupts[ability.strName] and ability.bIsActive and self.playerLas[ability.nId] and ability.nCurrentTier ~= 0 then
 	        local interrupt = self:GetInterruptTable(ability)
 			
-			Print(interrupt.name)
+			--Print(interrupt.name)
 			local ab = {
 				obj = ability,
 				onCooldown = false
@@ -224,7 +224,7 @@ function InterruptSync:SendLasUpdate()
 		msg.type = g_MessageTypeLas
 		msg.version = g_MessageVersion
 
-		Print("Sending LasUpdate Message")
+		--Print("Sending LasUpdate Message")
 		self.intChannel:SendMessage(msg)
 		self:OnMessageInChannel(nil, msg)
 	end
@@ -262,7 +262,7 @@ function InterruptSync:SendAbilityUpdate(ability)
 		msg.interrupt = self:GetInterruptTable(ability.obj)
 		msg.type = g_MessageTypeAbility
 		msg.version = g_MessageVersion
-		Print("Sending Ability Message")
+		--Print("Sending Ability Message")
 		self.intChannel:SendMessage(msg)
 		self:OnMessageInChannel(nil, msg)
 	end
@@ -285,11 +285,11 @@ function InterruptSync:OnTimer()
 		local ability = ab.obj
 		ab.remainingCd = ability.tTiers[ability.nCurrentTier].splObject:GetCooldownRemaining()
 		if ab.remainingCd > 0 and not ab.onCooldown then
-			Print(string.format("Interrupt fired: %s", ability.strName))
+			--Print(string.format("Interrupt fired: %s", ability.strName))
 			ab.onCooldown = true
 			self:SendAbilityUpdate(ab)
 		elseif ab.remainingCd == 0 and ab.onCooldown then
-			Print(string.format("Interrupt Reset: %s", ability.strName))
+			--Print(string.format("Interrupt Reset: %s", ability.strName))
 			ab.onCooldown  = false
 			self:SendAbilityUpdate(ab)
 		end
@@ -303,7 +303,7 @@ function InterruptSync:Update()
 end
 
 function InterruptSync:OnUpdateTimer()
-	Print("OnUpdateTimer()")
+	--Print("OnUpdateTimer()")
 	self:UpdateCurrentGroup()
 	self:ReadCurrentLas()
 	self:SendLasUpdate()
@@ -312,14 +312,14 @@ function InterruptSync:OnUpdateTimer()
 end
 
 function InterruptSync:OnMessageInChannel(channel, msg)
-	Print("OnMessageInChannel()")
+	--Print("OnMessageInChannel()")
 	if self:IsInGroup(msg.playerName) then
-		Print("Sender is in group")
+		--Print("Sender is in group")
 		if msg.type == g_MessageTypeLas then
-			Print("LAS received")
+			--Print("LAS received")
 			self.container:HandleLas(msg)
 		elseif msg.type == g_MessageTypeAbility then
-			Print("Ability received!")
+			--Print("Ability received!")
 			self.container:HandleInterrupt(msg)
 		end
 	end
