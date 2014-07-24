@@ -11,9 +11,8 @@ function InterruptBar:new(xmlDoc, playerName, interrupt, itemList)
 	
 	self.wndInt = Apollo.LoadForm(xmlDoc, "InterruptBar", itemList, self)
 	
-	self.wndInt:FindChild("Icon"):SetSprite(self:GetIcon())
+	self.wndInt:FindChild("Icon"):SetSprite(interrupt.icon)
     self.wndInt:FindChild("ProgressOverlay"):SetMax(interrupt.cooldown)
-    --self.wndInt:FindChild("ProgressOverlay"):SetFullSprite(self:GetIcon())
     self.wndInt:FindChild("Text"):SetText(string.format("%s - %s", playerName, interrupt.name))
     self.wndInt:SetData(interrupt)
 
@@ -23,12 +22,6 @@ function InterruptBar:new(xmlDoc, playerName, interrupt, itemList)
 	end
 	
 	return self
-end
-
-function InterruptBar:GetIcon()
-	--ability = AbilityBook.GetAbilityInfo(self.interrupt.id)
-	--return ability.tTiers[1].splObject:GetIcon()
-	return self.interrupt.icon
 end
 
 function InterruptBar:SetInterrupt(interrupt)
