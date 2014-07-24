@@ -20,8 +20,9 @@ function InterruptBar:new(xmlDoc, interrupt, itemList)
 end
 
 function InterruptBar:GetIcon()
-	ability = AbilityBook.GetAbilityInfo(self.interrupt.id)
-	return ability.tTiers[1].splObject:GetIcon()
+	--ability = AbilityBook.GetAbilityInfo(self.interrupt.id)
+	--return ability.tTiers[1].splObject:GetIcon()
+	return self.interrupt.icon
 end
 
 function InterruptBar:SetInterrupt(interrupt)

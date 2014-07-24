@@ -240,6 +240,7 @@ function InterruptSync:GetInterruptTable(ability)
 	interrupt.ia = g_interrupts[ability.strName][ability.nCurrentTier]
 	interrupt.cooldown = abObject:GetCooldownTime()
 	interrupt.cooldownRemaining = abObject:GetCooldownRemaining()
+	interrupt.icon = abObject:GetIcon()
 		
 	return interrupt
 end
@@ -257,7 +258,6 @@ function InterruptSync:SendAbilityUpdate(ability)
 		msg.interrupt = self:GetInterruptTable(ability.obj)
 		msg.type = g_MessageTypeAbility
 		msg.version = g_MessageVersion
-		
 		Print("Sending Ability Message")
 		self.intChannel:SendMessage(msg)
 		self:OnMessageInChannel(nil, msg)
@@ -309,13 +309,13 @@ end
 
 function InterruptSync:OnMessageInChannel(channel, msg)
 	Print("OnMessageInChannel()")
-	if self:IsInGroup(msg.pName) then
+	if self:IsInGroup(msg.playerName) then
 		Print("Sender is in group")
 		if msg.type == g_MessageTypeLas then
 			Print("LAS received")
 			self.container:HandleLas(msg)
 		elseif msg.type == g_MessageTypeAbility then
-			Print("Ability recieved!")
+			Print("Ability received!")
 			self.container:HandleInterrupt(msg)
 		end
 	end
