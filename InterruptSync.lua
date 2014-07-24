@@ -41,8 +41,11 @@ local g_interrupts = {
 	["Obstruct Vision"] = {1, 1, 1, 1, 1, 1, 1, 1, 1}
 }
 
-local g_MessageTypeLas = 1
-local g_MessageTypeAbility = 2
+local g_MessageTypeLas = 1 -- this message sends all interrupts of a player
+local g_MessageTypeAbility = 2 -- this message sends a single interrupt
+local g_MessageVersion = 1
+
+local g_TimerUpdateValue = 0.1
 
 local g_TextItemCount = 3
  
@@ -93,6 +96,15 @@ function InterruptSync:OnDocLoaded()
 		
 		self.wndItemList = self.wndMain:FindChild("ItemList")
 	    self.wndMain:Show(false, true)
+	
+		-- Rover
+		self.Rover = Apollo.GetAddon("Rover")
+		if self.Rover then
+			self.Rover:AddWatch("InterruptSync.self", self)
+		end
+	
+		-- not sure what is the best place for this is really
+		self.container = self.InterruptContainer:new(self.xmlDoc, self.Rover, self.InterruptBar, self.wndMain)
 
 		-- if the xmlDoc is no longer needed, you should set it to nil
 		-- self.xmlDoc = nil
@@ -101,18 +113,12 @@ function InterruptSync:OnDocLoaded()
 		-- e.g. Apollo.RegisterEventHandler("KeyDown", "OnKeyDown", self)
 		Apollo.RegisterSlashCommand("nsync", "OnInterruptSyncOn", self)
 
-		self.timer = ApolloTimer.Create(0.1, true, "OnTimer", self)
+		self.timer = ApolloTimer.Create(g_TimerUpdateValue, true, "OnTimer", self)
 		
 		self.playerLas = {}
 		self.playerInterruptAbilitites = {}
 		self.groupMembers = {}
 		
-		-- Rover
-		self.Rover = Apollo.GetAddon("Rover")
-		if self.Rover then
-			self.Rover:AddWatch("InterruptSync.self", self)
-		end
-
 		self.intChannel = ICCommLib.JoinChannel("InterruptSync", "OnMessageInChannel", self)
 
 		-- Do additional Addon initialization here
@@ -137,7 +143,7 @@ function InterruptSync:DrawInterruptControl(wnd, controlName, interrupt)
 	local wndItem = wnd:FindChild(controlName)
 	if wndItem then
 		wndItem:SetText(tostring(interrupt.ia))
-		local tooltipText = string.format("%s - %f", interrupt.name, interrupt.cd)
+		local tooltipText = string.format("%s - %f", interrupt.name, interrupt.cooldown)
 		wndItem:SetTooltip(tooltipText)
 	end
 end
@@ -148,38 +154,6 @@ function InterruptSync:ResetInterruptControl(wnd, controlName)
 		wndItem:SetText("")
 		wndItem:SetTooltip("")
 	end
-end
-
-function InterruptSync:UpdateUIWithMessage(msg)
-	Print("UpdateUIWithMessage()")
-		
-	local wnd = nil
-	if self.tItems[msg.pName] then
-		wnd = self.tItems[msg.pName]
-	else
-		wnd = Apollo.LoadForm(self.xmlDoc, "ListItem", self.wndItemList, self)
-		self.tItems[msg.pName] = wnd
-	end
-	
-	local wndItemPlayerText = wnd:FindChild("TextPlayerName")
-	if wndItemPlayerText then
-		wndItemPlayerText:SetText(msg.pName)
-	end
-		
-	local i = 1
-	for _, int in pairs(msg.interrupts) do
-		local itemName = string.format("TextInt%s", i)
-		self:DrawInterruptControl(wnd, itemName, int)
-		i = i + 1
-	end
-	
-	for j = i,g_TextItemCount do
-		local itemName = string.format("TextInt%s", j)
-		self:ResetInterruptControl(wnd, itemName)
-	end
-			
-	wnd:SetData(msg)
-	self.wndItemList:ArrangeChildrenVert()
 end
 
 function InterruptSync:UpdateCurrentGroup()
@@ -222,19 +196,16 @@ function InterruptSync:GetActiveInterrupts()
 	local abilities = AbilityBook.GetAbilitiesList()
 	for _, ability in pairs(abilities) do
 	    if g_interrupts[ability.strName] and ability.bIsActive and self.playerLas[ability.nId] and ability.nCurrentTier ~= 0 then
-	        local int = {}
-			int.cd = ability.tTiers[ability.nCurrentTier].splObject:GetCooldownTime()
-			int.name = ability.strName
-			int.ia = g_interrupts[ability.strName][ability.nCurrentTier]
+	        local interrupt = self:GetInterruptTable(ability)
 			
-			Print(int.name)
+			Print(interrupt.name)
 			local ab = {
 				obj = ability,
 				onCooldown = false
 			}
 			table.insert(self.playerInterruptAbilitites, ab)
 			
-			table.insert(interrupts, int)
+			table.insert(interrupts, interrupt)
 		end
 	end
 	return interrupts
@@ -244,14 +215,33 @@ function InterruptSync:SendLasUpdate()
 	local player = GameLib.GetPlayerUnit()
 	if player then
 		local msg = {}	
-		msg.pName = player:GetName()
+		msg.playerName = player:GetName()
 		msg.interrupts = self:GetActiveInterrupts()
 		msg.type = g_MessageTypeLas
+		msg.version = g_MessageVersion
 
-		Print("Sending Message")
+		Print("Sending LasUpdate Message")
 		self.intChannel:SendMessage(msg)
 		self:OnMessageInChannel(nil, msg)
 	end
+end
+
+function InterruptSync:GetInterruptTable(ability)
+
+	if self.Rover then
+		self.Rover:AddWatch("GetInterruptTable_Ability", ability)
+	end
+
+	local abObject = ability.tTiers[ability.nCurrentTier].splObject
+
+	local interrupt = {}
+	interrupt.name = ability.strName
+	interrupt.id = abObject:GetId()
+	interrupt.ia = g_interrupts[ability.strName][ability.nCurrentTier]
+	interrupt.cooldown = abObject:GetCooldownTime()
+	interrupt.cooldownRemaining = abObject:GetCooldownRemaining()
+		
+	return interrupt
 end
 
 function InterruptSync:SendAbilityUpdate(ability)
@@ -263,9 +253,10 @@ function InterruptSync:SendAbilityUpdate(ability)
 	local player = GameLib.GetPlayerUnit()
 	if player then
 		local msg = {}
-		msg.pName = player:GetName()
-		msg.ability = ability
+		msg.playerName = player:GetName()
+		msg.interrupt = self:GetInterruptTable(ability.obj)
 		msg.type = g_MessageTypeAbility
+		msg.version = g_MessageVersion
 		
 		Print("Sending Ability Message")
 		self.intChannel:SendMessage(msg)
@@ -283,7 +274,9 @@ end
 -- on timer
 function InterruptSync:OnTimer()
 	-- Do your timer-related stuff here.
-	-- todo: minimize sent data by creating a smaller ab object with icon (id?), name, cooldown. we dont need the entire ab.obj thing.
+	
+	self.container:HandleTimerUpdate(g_TimerUpdateValue)
+	
 	for _, ab in pairs(self.playerInterruptAbilitites) do
 		local ability = ab.obj
 		ab.remainingCd = ability.tTiers[ability.nCurrentTier].splObject:GetCooldownRemaining()
@@ -319,9 +312,11 @@ function InterruptSync:OnMessageInChannel(channel, msg)
 	if self:IsInGroup(msg.pName) then
 		Print("Sender is in group")
 		if msg.type == g_MessageTypeLas then
-			self:UpdateUIWithMessage(msg)
+			Print("LAS received")
+			self.container:HandleLas(msg)
 		elseif msg.type == g_MessageTypeAbility then
 			Print("Ability recieved!")
+			self.container:HandleInterrupt(msg)
 		end
 	end
 end
