@@ -98,6 +98,8 @@ function InterruptSync:OnDocLoaded()
 		
 		self.wndContainer = Apollo.LoadForm(self.xmlDoc, "Barcontainer", nil, self)
 		self.wndContainer:Show(false, true)
+		
+		Apollo.LoadSprites("ISSprites.xml")
 			
 		-- Rover
 		self.Rover = Apollo.GetAddon("Rover")
