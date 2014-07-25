@@ -71,3 +71,15 @@ function InterruptContainer:HandleTimerUpdate(timerValue)
 	end
 end
 
+function InterruptContainer:HandleGroupUpdate(group)
+	for playerName, interrupts in pairs(self.players) do
+		if not group[playerName] then
+			for _, interrupt in pairs(interrupts) do
+				interrupt.wndInt:Destroy()
+				self.itemList:ArrangeChildrenVert()
+			end
+			self.players[playerName] = nil
+		end
+	end
+end
+

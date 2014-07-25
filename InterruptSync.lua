@@ -307,6 +307,7 @@ function InterruptSync:OnUpdateTimer()
 	self:UpdateCurrentGroup()
 	self:ReadCurrentLas()
 	self:SendLasUpdate()
+	self.container:HandleGroupUpdate(self.groupMembers)
 	
 	self.updateTimer = nil
 end
