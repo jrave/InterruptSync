@@ -38,7 +38,13 @@ function InterruptBar:SetInterrupt(interrupt)
 end
 
 function InterruptBar:TriggerUpdate()
-	self.wndInt:FindChild("ProgressOverlay"):SetProgress(self.interrupt.cooldownRemaining)
-	self.wndInt:FindChild("Timer"):SetText(string.format("%.1fs", self.interrupt.cooldownRemaining))
+	if self.wndInt and self.interrupt then
+		local overlay = self.wndInt:FindChild("ProgressOverlay")
+		local timer = self.wndInt:FindChild("Timer")
+		if overlay and timer then
+			overlay:SetProgress(self.interrupt.cooldownRemaining)
+			timer:SetText(string.format("%.1fs", self.interrupt.cooldownRemaining))
+		end
+	end
 end
 

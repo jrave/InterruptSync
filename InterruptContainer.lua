@@ -76,6 +76,7 @@ function InterruptContainer:HandleGroupUpdate(group)
 		if not group[playerName] then
 			for _, interrupt in pairs(interrupts) do
 				interrupt.wndInt:Destroy()
+				interrupt.wndInt = nil
 				self.itemList:ArrangeChildrenVert()
 			end
 			self.players[playerName] = nil
