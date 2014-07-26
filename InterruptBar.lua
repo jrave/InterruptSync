@@ -9,12 +9,17 @@ function InterruptBar:new(xmlDoc, playerName, interrupt, itemList)
 	self.interrupt = interrupt
 	self.playerName = playerName
 	
+	local data = {
+		interrupt = interrupt,
+		playerName = playerName
+	}
+	
 	self.wndInt = Apollo.LoadForm(xmlDoc, "InterruptBar", itemList, self)
 	
 	self.wndInt:FindChild("Icon"):SetSprite(interrupt.icon)
     self.wndInt:FindChild("ProgressOverlay"):SetMax(interrupt.cooldown)
     self.wndInt:FindChild("Text"):SetText(string.format("%s - %s", playerName, interrupt.name))
-    self.wndInt:SetData(interrupt)
+    self.wndInt:SetData(data)
 
 	if self.interrupt.ia > 1 then
 		self.wndInt:FindChild("CCArmorContainer"):FindChild("CCArmorValue"):SetText(self.interrupt.ia)

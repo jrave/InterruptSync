@@ -35,7 +35,7 @@ function InterruptContainer:HandleInterrupt(msg)
 		player[interrupt.name] = interruptBar
 	end
 	interruptBar:SetInterrupt(interrupt)
-	self.itemList:ArrangeChildrenVert()
+	self:ArrangeBars()
 	self:ResizeWindow()
 end
 
@@ -49,7 +49,7 @@ function InterruptContainer:HandleLas(msg)
 	-- on LAS update delete all bars of player
 		for _, interruptBar in pairs(player) do
 			interruptBar.wndInt:Destroy()
-			self.itemList:ArrangeChildrenVert()
+			self:ArrangeBars()
 		end
 	end
 	-- Add the new bars
@@ -57,7 +57,7 @@ function InterruptContainer:HandleLas(msg)
 		local bar = self.InterruptBar:new(self.xmlDoc, playerName, interrupt, self.itemList)
 		player[interrupt.name] = bar
 		bar:SetInterrupt(interrupt)
-		self.itemList:ArrangeChildrenVert()
+		self:ArrangeBars()
 	end
 	self:ResizeWindow()
 end
@@ -68,7 +68,7 @@ function InterruptContainer:HandleTimerUpdate(timerValue)
 			if bar.interrupt.cooldownRemaining > 0 then
 				bar.interrupt.cooldownRemaining = bar.interrupt.cooldownRemaining - timerValue
 				bar:TriggerUpdate()
-				self.itemList:ArrangeChildrenVert()
+				self:ArrangeBars()
 			end
 		end
 	end
@@ -80,12 +80,26 @@ function InterruptContainer:HandleGroupUpdate(group)
 			for _, interrupt in pairs(interrupts) do
 				interrupt.wndInt:Destroy()
 				interrupt.wndInt = nil
-				self.itemList:ArrangeChildrenVert()
+				self:ArrangeBars()
 			end
 			self.players[playerName] = nil
 		end
 	end
 	self:ResizeWindow()
+end
+
+local SortByName = function(item1, item2)
+	local int1 = item1:GetData()
+	local int2 = item2:GetData()
+	if int1 and int2 then	
+		return int1.playerName < int2.playerName
+	else
+		return 0
+	end
+end
+
+function InterruptContainer:ArrangeBars()
+	self.itemList:ArrangeChildrenVert(0, SortByName)
 end
 
 function InterruptContainer:ResizeWindow()
