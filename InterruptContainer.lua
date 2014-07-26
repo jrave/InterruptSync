@@ -8,6 +8,7 @@ function InterruptContainer:new(xmlDoc, rover, interruptbar, mainWindow)
 	local self = setmetatable({}, InterruptContainer)
 	
 	self.itemList = mainWindow:FindChild("ItemList")
+	self.mainWindow = mainWindow
 	self.xmlDoc = xmlDoc
 	self.rover = rover
 	self.InterruptBar = interruptbar
@@ -35,6 +36,7 @@ function InterruptContainer:HandleInterrupt(msg)
 	end
 	interruptBar:SetInterrupt(interrupt)
 	self.itemList:ArrangeChildrenVert()
+	self:ResizeWindow()
 end
 
 function InterruptContainer:HandleLas(msg)
@@ -57,6 +59,7 @@ function InterruptContainer:HandleLas(msg)
 		bar:SetInterrupt(interrupt)
 		self.itemList:ArrangeChildrenVert()
 	end
+	self:ResizeWindow()
 end
 
 function InterruptContainer:HandleTimerUpdate(timerValue)
@@ -82,5 +85,18 @@ function InterruptContainer:HandleGroupUpdate(group)
 			self.players[playerName] = nil
 		end
 	end
+	self:ResizeWindow()
+end
+
+function InterruptContainer:ResizeWindow()
+	local left, top, right, bottom = self.mainWindow:GetAnchorOffsets()
+	local childrenCount = #self.itemList:GetChildren()
+	local newHeight = 0
+	if childrenCount > 0 then
+		local child = self.itemList:GetChildren()[1]
+		local childHeight = child:GetHeight()
+		newHeight = top + (childrenCount * childHeight)
+	end
+	self.mainWindow:SetAnchorOffsets(left, top, right, newHeight)
 end
 
