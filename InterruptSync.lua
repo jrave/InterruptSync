@@ -137,6 +137,10 @@ function InterruptSync:OnDocLoaded()
 		
 		-- Perform an update.
 		self:Update()
+		
+		if self.showIS then
+			self.wndContainer:Invoke()
+		end
 	end
 end
 
@@ -335,6 +339,35 @@ end
 function InterruptSync:OnWindowManagementReady()
     Event_FireGenericEvent("WindowManagementAdd", {wnd = self.wndContainer, strName = "InterruptSync"})
 end
+
+
+-----------------------------------------------------------------------------------------------
+-- Options
+-----------------------------------------------------------------------------------------------
+
+function InterruptSync:OnSave(eType)
+	if eType ~= GameLib.CodeEnumAddonSaveLevel.Character then
+		return nil
+	end
+	
+	local tSaved =
+	{
+		bShowIS = self.showIS
+	}
+
+	return tSaved
+end
+
+function InterruptSync:OnRestore(eType, tSavedData)
+	if eType == GameLib.CodeEnumAddonSaveLevel.Character and tSavedData then
+		if tSavedData.bShowIS ~= nil then
+			self.showIS = tSavedData.bShowIS
+		else
+			self.showIS = false
+		end
+	end
+end
+
 
 -----------------------------------------------------------------------------------------------
 -- InterruptSyncForm Functions
