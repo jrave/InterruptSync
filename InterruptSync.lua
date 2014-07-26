@@ -133,6 +133,8 @@ function InterruptSync:OnDocLoaded()
 		Apollo.RegisterEventHandler("Group_Join", "Update", self)
 		Apollo.RegisterEventHandler("Group_Left", "Update", self)
 		
+		Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
+		
 		-- Perform an update.
 		self:Update()
 	end
@@ -330,6 +332,9 @@ function InterruptSync:OnMessageInChannel(channel, msg)
 	end
 end
 
+function InterruptSync:OnWindowManagementReady()
+    Event_FireGenericEvent("WindowManagementAdd", {wnd = self.wndContainer, strName = "InterruptSync"})
+end
 
 -----------------------------------------------------------------------------------------------
 -- InterruptSyncForm Functions
