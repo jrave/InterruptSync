@@ -269,10 +269,14 @@ function InterruptSync:SendAbilityUpdate(ability)
 end
 
 -- on SlashCommand "/nsync"
-function InterruptSync:OnInterruptSyncOn()
-	self.wndContainer:Invoke() -- show the window
-	
-	self:SendLasUpdate()
+function InterruptSync:OnInterruptSyncOn(strCmd, strArg)
+	if string.lower(strArg) == "show" then
+		self.showIS = true
+		self.wndContainer:Invoke() -- show the window
+	elseif string.lower(strArg) == "hide" then
+		self.showIS = false
+		self.wndContainer:Close()
+	end
 end
 
 -- on timer
