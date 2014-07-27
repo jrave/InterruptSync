@@ -45,11 +45,14 @@ local g_interrupts = {
 
 local g_MessageTypeLas = 1 -- this message sends all interrupts of a player
 local g_MessageTypeAbility = 2 -- this message sends a single interrupt
+local g_MessageTypeGrouping = 3 -- this message sends the intterupt grouping
 local g_MessageVersion = 1
 
 local g_TimerUpdateValue = 0.1
 
 local g_TextItemCount = 3
+
+local g_GroupCount = 5
  
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -98,7 +101,7 @@ function InterruptSync:OnDocLoaded()
 		
 	    self.wndMain:Show(false, true)
 		
-		self.wndContainer = Apollo.LoadForm(self.xmlDoc, "Barcontainer", nil, self)
+		self.wndContainer = Apollo.LoadForm(self.xmlDoc, "BarContainer", nil, self)
 		self.wndContainer:Show(false, true)
 		
 		Apollo.LoadSprites("ISSprites.xml")
@@ -124,6 +127,7 @@ function InterruptSync:OnDocLoaded()
 		self.playerLas = {}
 		self.playerInterruptAbilitites = {}
 		self.groupMembers = {}
+		self.interruptGrouping = {}
 		
 		self.intChannel = ICCommLib.JoinChannel("InterruptSync", "OnMessageInChannel", self)
 
@@ -133,12 +137,14 @@ function InterruptSync:OnDocLoaded()
 		Apollo.RegisterEventHandler("Group_Add", "Update", self)
 		Apollo.RegisterEventHandler("Group_Remove", "Update", self)
 		Apollo.RegisterEventHandler("Group_Join", "Update", self)
-		Apollo.RegisterEventHandler("Group_Left", "Update", self)
+		Apollo.RegisterEventHandler("Group_Left", "OnGroupLeft", self)
 		Apollo.RegisterEventHandler("Group_Other_Joined", "Update", self)
 		Apollo.RegisterEventHandler("Group_Other_Left", "Update", self)
 		Apollo.RegisterEventHandler("Group_Updated", "Update", self)
 		
-		
+		--Todo: On group leave reset interruptGrouping
+			
+		Apollo.RegisterEventHandler("InterruptSync_UpdateGrouping", "OnUpdateGrouping", self)	
 		Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
 		
 		-- Perform an update.
@@ -232,6 +238,7 @@ function InterruptSync:SendLasUpdate()
 	if player then
 		local msg = {}	
 		msg.playerName = player:GetName()
+		self.playerName = msg.playerName
 		msg.interrupts = self:GetActiveInterrupts()
 		msg.type = g_MessageTypeLas
 		msg.version = g_MessageVersion
@@ -240,6 +247,28 @@ function InterruptSync:SendLasUpdate()
 		self.intChannel:SendMessage(msg)
 		self:OnMessageInChannel(nil, msg)
 	end
+end
+
+function InterruptSync:UpdateInterruptGrouping(msg)
+	local playerUnit = GameLib.GetPlayerUnit()
+	local playerName = nil
+	if playerUnit then
+		playerName = playerUnit:GetName()
+	end
+	local player = msg.players[playerName]
+	if player == nil then
+		return
+	end
+	for interruptName, interrupt in pairs(player) do
+		local int = interrupt.interrupt
+		local group = 0
+		if int.group then
+			group = int.group
+			Print("Found group id")
+		end
+		self.interruptGrouping[interruptName] = group
+	end
+	Event_FireGenericEvent("SendVarToRover", "UpdateInterruptGrouping_interruptGrouping", self.interruptGrouping)
 end
 
 function InterruptSync:GetInterruptTable(ability)
@@ -257,6 +286,12 @@ function InterruptSync:GetInterruptTable(ability)
 	interrupt.cooldown = abObject:GetCooldownTime()
 	interrupt.cooldownRemaining = abObject:GetCooldownRemaining()
 	interrupt.icon = abObject:GetIcon()
+	-- need to send current group number here - or 0
+	if self.interruptGrouping[interrupt.name] then
+		interrupt.group = self.interruptGrouping[interrupt.name]
+	else
+		interrupt.group = 0
+	end
 		
 	return interrupt
 end
@@ -318,6 +353,13 @@ function InterruptSync:Update()
 	self.updateTimer = ApolloTimer.Create(1, false, "OnUpdateTimer", self)
 end
 
+function InterruptSync:OnGroupLeft()
+	--reset interrupt grouping
+	self.interruptGrouping = {}
+	
+	self:Update()
+end
+
 function InterruptSync:OnUpdateTimer()
 	--Print("OnUpdateTimer()")
 	self:UpdateCurrentGroup()
@@ -338,12 +380,26 @@ function InterruptSync:OnMessageInChannel(channel, msg)
 		elseif msg.type == g_MessageTypeAbility then
 			--Print("Ability received!")
 			self.container:HandleInterrupt(msg)
+		elseif msg.type == g_MessageTypeGrouping then
+			self:UpdateInterruptGrouping(msg)
+			self.container:HandleGrouping(msg)
 		end
 	end
 end
 
 function InterruptSync:OnWindowManagementReady()
     Event_FireGenericEvent("WindowManagementAdd", {wnd = self.wndContainer, strName = "InterruptSync"})
+end
+
+function InterruptSync:OnUpdateGrouping(groupingUpdate)
+	self.container:HandleGroupingUpdate(groupingUpdate)
+	local msg = self.container:CreateGroupingMessage()
+	msg.type = g_MessageTypeGrouping
+	msg.version = g_MessageVersion
+	msg.playerName = self.playerName
+	self.intChannel:SendMessage(msg)
+	self:OnMessageInChannel(nil, msg)
+	Event_FireGenericEvent("SendVarToRover", "OnUpdateGrouping_msg", msg)
 end
 
 
