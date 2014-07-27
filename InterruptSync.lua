@@ -133,6 +133,10 @@ function InterruptSync:OnDocLoaded()
 		Apollo.RegisterEventHandler("Group_Remove", "Update", self)
 		Apollo.RegisterEventHandler("Group_Join", "Update", self)
 		Apollo.RegisterEventHandler("Group_Left", "Update", self)
+		Apollo.RegisterEventHandler("Group_Other_Joined", "Update", self)
+		Apollo.RegisterEventHandler("Group_Other_Left", "Update", self)
+		Apollo.RegisterEventHandler("Group_Updated", "Update", self)
+		
 		
 		Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
 		
