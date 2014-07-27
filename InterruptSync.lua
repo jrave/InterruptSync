@@ -36,6 +36,7 @@ local g_interrupts = {
 	-- Spellslinger
 	["Gate"] = {1, 1, 1, 1, 2, 2, 2, 2, 2},
 	["Arcane Shock"] = {1, 1, 1, 1, 1, 1, 1, 1, 1},
+	["Spatial Shift"] = {1, 1, 1, 1, 1, 1, 1, 1, 1},
 	-- Engineer
 	["Zap"] = {1, 1, 1, 1, 2, 2, 2, 2, 2},
 	["Obstruct Vision"] = {1, 1, 1, 1, 1, 1, 1, 1, 1}
