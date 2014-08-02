@@ -33,6 +33,7 @@ local g_interrupts = {
 	-- Esper
 	["Crush"] = {1, 1, 1, 1, 2, 2, 2, 2, 2},
 	["Shockwave"] = {1, 1, 1, 1, 1, 1, 1, 1, 1},
+	["Incapacitate"] = {1, 1, 1, 1, 1, 1, 1, 1, 1},
 	-- Spellslinger
 	["Gate"] = {1, 1, 1, 1, 2, 2, 2, 2, 2},
 	["Arcane Shock"] = {1, 1, 1, 1, 1, 1, 1, 1, 1},
